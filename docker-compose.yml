@@ -17,7 +17,7 @@ services:
       
       # API 配置
       - API_PREFIX=/email-receiver-api
-      - CORS_ORIGIN=https://bridge.yunc.tech
+      - CORS_ORIGIN=https://your-domain.com
       
       # 日志配置
       - LOG_LEVEL=info

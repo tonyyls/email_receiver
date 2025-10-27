@@ -20,24 +20,24 @@ sudo netstat -tlnp | grep -E ':80|:443'
 ### 2. 备份当前配置
 ```bash
 # 创建带时间戳的备份
-sudo cp /etc/nginx/sites-available/bridge.yunc.tech \
-       /etc/nginx/sites-available/bridge.yunc.tech.backup.$(date +%Y%m%d_%H%M%S)
+sudo cp /etc/nginx/sites-available/your-domain.com \
+       /etc/nginx/sites-available/your-domain.com.backup.$(date +%Y%m%d_%H%M%S)
 
-# 验证备份
-ls -la /etc/nginx/sites-available/bridge.yunc.tech.backup.*
+# 查看备份文件
+ls -la /etc/nginx/sites-available/your-domain.com.backup.*
 ```
 
 ### 3. 检查证书文件
 ```bash
 # 检查证书文件存在性和权限
-ls -la /etc/nginx/cert/bridge.yunc.tech.*
+ls -la /etc/nginx/cert/your-domain.com.*
 
 # 检查证书有效期
-openssl x509 -in /etc/nginx/cert/bridge.yunc.tech.pem -text -noout | grep -A2 "Validity"
+openssl x509 -in /etc/nginx/cert/your-domain.com.pem -text -noout | grep -A2 "Validity"
 
 # 验证证书和私钥匹配
-cert_hash=$(openssl x509 -noout -modulus -in /etc/nginx/cert/bridge.yunc.tech.pem | openssl md5)
-key_hash=$(openssl rsa -noout -modulus -in /etc/nginx/cert/bridge.yunc.tech.key | openssl md5)
+cert_hash=$(openssl x509 -noout -modulus -in /etc/nginx/cert/your-domain.com.pem | openssl md5)
+key_hash=$(openssl rsa -noout -modulus -in /etc/nginx/cert/your-domain.com.key | openssl md5)
 echo "证书哈希: $cert_hash"
 echo "私钥哈希: $key_hash"
 ```
@@ -47,10 +47,10 @@ echo "私钥哈希: $key_hash"
 ### 步骤 1: 应用新配置
 ```bash
 # 复制修复后的配置文件
-sudo cp nginx-bridge-yunc-tech-fixed.conf /etc/nginx/sites-available/bridge.yunc.tech
+sudo cp nginx-bridge-yunc-tech-fixed.conf /etc/nginx/sites-available/your-domain.com
 
 # 或者手动编辑现有配置
-sudo nano /etc/nginx/sites-available/bridge.yunc.tech
+sudo nano /etc/nginx/sites-available/your-domain.com
 ```
 
 ### 步骤 2: 验证配置语法
@@ -77,13 +77,13 @@ sudo systemctl status nginx
 ### 步骤 4: 验证部署
 ```bash
 # 基础连接测试
-curl -I https://bridge.yunc.tech/
+curl -I https://your-domain.com/
 
 # API 端点测试
-curl -I https://bridge.yunc.tech/email-receiver-api/
+curl -I https://your-domain.com/email-receiver-api/
 
 # 详细连接测试
-curl -vvv https://bridge.yunc.tech/email-receiver-api/
+curl -vvv https://your-domain.com/email-receiver-api/
 ```
 
 ## 🧪 测试方案
@@ -94,24 +94,24 @@ curl -vvv https://bridge.yunc.tech/email-receiver-api/
 ```bash
 # OpenSSL 连接测试
 echo "测试 TLS 连接..."
-openssl s_client -connect bridge.yunc.tech:443 -servername bridge.yunc.tech < /dev/null
+openssl s_client -connect your-domain.com:443 -servername your-domain.com < /dev/null
 
 # 测试 TLS 1.2
 echo "测试 TLS 1.2..."
-openssl s_client -connect bridge.yunc.tech:443 -tls1_2 < /dev/null
+openssl s_client -connect your-domain.com:443 -tls1_2 < /dev/null
 
 # 测试 TLS 1.3
 echo "测试 TLS 1.3..."
-openssl s_client -connect bridge.yunc.tech:443 -tls1_3 < /dev/null
+openssl s_client -connect your-domain.com:443 -tls1_3 < /dev/null
 ```
 
 #### SSL 安全性测试
 ```bash
 # 检查支持的加密套件
-nmap --script ssl-enum-ciphers -p 443 bridge.yunc.tech
+nmap --script ssl-enum-ciphers -p 443 your-domain.com
 
-# 检查 SSL 配置安全性
-testssl.sh bridge.yunc.tech
+# 使用 testssl.sh 进行全面测试
+testssl.sh your-domain.com
 ```
 
 ### 2. API 功能测试
@@ -119,16 +119,16 @@ testssl.sh bridge.yunc.tech
 #### HTTP 方法测试
 ```bash
 # GET 请求测试
-curl -X GET https://bridge.yunc.tech/email-receiver-api/ \
+curl -X GET https://your-domain.com/email-receiver-api/ \
   -H "Accept: application/json"
 
 # POST 请求测试
-curl -X POST https://bridge.yunc.tech/email-receiver-api/ \
+curl -X POST https://your-domain.com/email-receiver-api/ \
   -H "Content-Type: application/json" \
   -d '{"test": "data"}'
 
 # OPTIONS 请求测试（CORS）
-curl -X OPTIONS https://bridge.yunc.tech/email-receiver-api/ \
+curl -X OPTIONS https://your-domain.com/email-receiver-api/ \
   -H "Origin: https://example.com" \
   -H "Access-Control-Request-Method: POST" \
   -H "Access-Control-Request-Headers: Content-Type"
@@ -140,7 +140,7 @@ curl -X OPTIONS https://bridge.yunc.tech/email-receiver-api/ \
 dd if=/dev/zero of=test_file.dat bs=1M count=10
 
 # 测试文件上传
-curl -X POST https://bridge.yunc.tech/email-receiver-api/upload \
+curl -X POST https://your-domain.com/email-receiver-api/upload \
   -F "file=@test_file.dat" \
   -v
 
@@ -153,16 +153,16 @@ rm test_file.dat
 #### 并发连接测试
 ```bash
 # 使用 ab 进行压力测试
-ab -n 1000 -c 50 https://bridge.yunc.tech/email-receiver-api/
+ab -n 1000 -c 50 https://your-domain.com/email-receiver-api/
 
-# 使用 wrk 进行性能测试
-wrk -t12 -c400 -d30s https://bridge.yunc.tech/email-receiver-api/
+# 使用 wrk 进行压力测试
+wrk -t12 -c400 -d30s https://your-domain.com/email-receiver-api/
 ```
 
 #### 连接超时测试
 ```bash
 # 测试连接超时设置
-timeout 35 curl https://bridge.yunc.tech/email-receiver-api/slow-endpoint
+timeout 35 curl https://your-domain.com/email-receiver-api/slow-endpoint
 ```
 
 ### 4. 错误处理测试
@@ -173,7 +173,7 @@ timeout 35 curl https://bridge.yunc.tech/email-receiver-api/slow-endpoint
 docker stop email-receiver
 
 # 测试错误页面
-curl -I https://bridge.yunc.tech/email-receiver-api/
+curl -I https://your-domain.com/email-receiver-api/
 
 # 重启后端服务
 docker start email-receiver
@@ -184,25 +184,25 @@ docker start email-receiver
 ### 1. 实时监控
 ```bash
 # 实时查看访问日志
-sudo tail -f /var/log/nginx/bridge.yunc.tech.access.log
+sudo tail -f /var/log/nginx/your-domain.com.access.log
 
 # 实时查看错误日志
-sudo tail -f /var/log/nginx/bridge.yunc.tech.error.log
+sudo tail -f /var/log/nginx/your-domain.com.error.log
 
 # 监控特定 API 访问
-sudo tail -f /var/log/nginx/bridge.yunc.tech.access.log | grep "/email-receiver-api"
+sudo tail -f /var/log/nginx/your-domain.com.access.log | grep "/email-receiver-api"
 ```
 
 ### 2. 日志分析
 ```bash
 # 统计访问量
-awk '{print $1}' /var/log/nginx/bridge.yunc.tech.access.log | sort | uniq -c | sort -nr | head -10
+awk '{print $1}' /var/log/nginx/your-domain.com.access.log | sort | uniq -c | sort -nr | head -10
 
 # 统计响应状态码
-awk '{print $9}' /var/log/nginx/bridge.yunc.tech.access.log | sort | uniq -c | sort -nr
+awk '{print $9}' /var/log/nginx/your-domain.com.access.log | sort | uniq -c | sort -nr
 
 # 查找错误请求
-grep " 4[0-9][0-9] \| 5[0-9][0-9] " /var/log/nginx/bridge.yunc.tech.access.log
+grep " 4[0-9][0-9] \| 5[0-9][0-9] " /var/log/nginx/your-domain.com.access.log
 ```
 
 ### 3. 系统资源监控
@@ -271,11 +271,11 @@ sudo systemctl restart nginx
 ls -la /etc/nginx/cert/
 
 # 测试证书
-openssl x509 -in /etc/nginx/cert/bridge.yunc.tech.pem -text -noout
+openssl x509 -in /etc/nginx/cert/your-domain.com.pem -text -noout
 
 # 检查证书权限
-sudo chmod 644 /etc/nginx/cert/bridge.yunc.tech.pem
-sudo chmod 600 /etc/nginx/cert/bridge.yunc.tech.key
+sudo chmod 644 /etc/nginx/cert/your-domain.com.pem
+sudo chmod 600 /etc/nginx/cert/your-domain.com.key
 ```
 
 #### 问题 3: 后端连接失败
@@ -293,14 +293,14 @@ telnet 172.17.0.1 3000
 ### 紧急回滚
 ```bash
 # 回滚到备份配置
-sudo cp /etc/nginx/sites-available/bridge.yunc.tech.backup.* \
-       /etc/nginx/sites-available/bridge.yunc.tech
+sudo cp /etc/nginx/sites-available/your-domain.com.backup.* \
+       /etc/nginx/sites-available/your-domain.com
 
 # 重载配置
 sudo nginx -s reload
 
 # 验证回滚
-curl -I https://bridge.yunc.tech/
+curl -I https://your-domain.com/
 ```
 
 ## 📈 后续优化建议

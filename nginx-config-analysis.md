@@ -52,7 +52,7 @@ proxy_pass `http://172.17.0.1:3000/email-receiver-api;`
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name bridge.yunc.tech;
+    server_name your-domain.com;
     
     charset utf-8;
 
@@ -73,8 +73,8 @@ server {
         image/svg+xml;
 
     # 修复的 SSL 配置
-    ssl_certificate /etc/nginx/cert/bridge.yunc.tech.pem;
-    ssl_certificate_key /etc/nginx/cert/bridge.yunc.tech.key;
+    ssl_certificate /etc/nginx/cert/your-domain.com.pem;
+    ssl_certificate_key /etc/nginx/cert/your-domain.com.key;
     
     # 安全的 SSL 协议配置
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -181,14 +181,14 @@ server {
     }
     
     # 日志配置
-    access_log /var/log/nginx/bridge.yunc.tech.access.log combined;
-    error_log /var/log/nginx/bridge.yunc.tech.error.log warn;
+    access_log /var/log/nginx/your-domain.com.access.log combined;
+    error_log /var/log/nginx/your-domain.com.error.log warn;
 }
 
 # 添加 HTTP 到 HTTPS 重定向
 server {
     listen 80;
-    server_name bridge.yunc.tech;
+    server_name your-domain.com;
     return 301 https://$server_name$request_uri;
 }
 ```
@@ -222,12 +222,12 @@ server {
 
 1. **备份当前配置**
    ```bash
-   sudo cp /etc/nginx/sites-available/bridge.yunc.tech /etc/nginx/sites-available/bridge.yunc.tech.backup
+   sudo cp /etc/nginx/sites-available/your-domain.com /etc/nginx/sites-available/your-domain.com.backup
    ```
 
 2. **应用新配置**
    ```bash
-   sudo nano /etc/nginx/sites-available/bridge.yunc.tech
+   sudo nano /etc/nginx/sites-available/your-domain.com
    # 粘贴修复后的配置
    ```
 
@@ -243,7 +243,7 @@ server {
 
 5. **验证修复**
    ```bash
-   curl -I https://bridge.yunc.tech/email-receiver-api/
+   curl -I https://your-domain.com/email-receiver-api/
    ```
 
 这些修复应该能解决您遇到的 TLS 连接问题。

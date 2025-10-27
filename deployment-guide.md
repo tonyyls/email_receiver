@@ -1,7 +1,7 @@
 # 部署指南：解决 TLS 连接错误
 
 ## 问题描述
-通过 nginx 代理访问 `https://bridge.yunc.tech` 时出现错误：
+通过 nginx 代理访问 `https://your-domain.com` 时出现错误：
 ```
 Client network socket disconnected before secure TLS connection was established
 ```
@@ -42,23 +42,23 @@ if (forwardedHost) {
 在 `.env` 文件中：
 ```bash
 HOST=0.0.0.0
-CORS_ORIGIN=*,https://bridge.yunc.tech
+CORS_ORIGIN=*,https://your-domain.com
 ```
 
 ### 2. Nginx 配置建议
 
-创建 nginx 配置文件 `/etc/nginx/sites-available/bridge.yunc.tech`：
+创建 nginx 配置文件 `/etc/nginx/sites-available/your-domain.com`：
 
 ```nginx
 server {
     listen 80;
-    server_name bridge.yunc.tech;
+    server_name your-domain.com;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name bridge.yunc.tech;
+    server_name your-domain.com;
 
     # SSL 证书配置
     ssl_certificate /path/to/your/certificate.crt;
@@ -123,19 +123,19 @@ sudo nginx -s reload
 
 #### 4.1 检查应用状态
 ```bash
-curl -H "Host: bridge.yunc.tech" http://localhost:3000/
+curl -H "Host: your-domain.com" http://localhost:3000/
 ```
 
 #### 4.2 检查代理访问
 ```bash
-curl -H "X-Forwarded-Host: bridge.yunc.tech" \
+curl -H "X-Forwarded-Host: your-domain.com" \
      -H "X-Forwarded-Proto: https" \
-     https://bridge.yunc.tech/
+     https://your-domain.com/
 ```
 
 #### 4.3 测试 API 接口
 ```bash
-curl -X POST https://bridge.yunc.tech/email-receiver-api/fetch-invoice-emails \
+curl -X POST https://your-domain.com/email-receiver-api/fetch-invoice-emails \
   -H "Content-Type: application/json" \
   -d '{"test": "data"}'
 ```
@@ -144,13 +144,13 @@ curl -X POST https://bridge.yunc.tech/email-receiver-api/fetch-invoice-emails \
 
 #### 5.1 检查 SSL 证书
 ```bash
-openssl s_client -connect bridge.yunc.tech:443 -servername bridge.yunc.tech
+openssl s_client -connect your-domain.com:443 -servername your-domain.com
 ```
 
 #### 5.2 检查 nginx 日志
 ```bash
 sudo tail -f /var/log/nginx/error.log
-sudo tail -f /var/log/nginx/bridge.yunc.tech.error.log
+sudo tail -f /var/log/nginx/your-domain.com.error.log
 ```
 
 #### 5.3 检查应用日志

@@ -262,7 +262,7 @@ services:
       - PORT=3000
       - HOST=0.0.0.0
       - API_PREFIX=/email-receiver-api
-      - CORS_ORIGIN=*,https://bridge.yunc.tech
+      - CORS_ORIGIN=*
       - LOG_LEVEL=info
       - INVOICE_CONFIDENCE_THRESHOLD=0.3
     volumes:
@@ -296,7 +296,7 @@ docker run -d \
   -e PORT=3000 \
   -e HOST=0.0.0.0 \
   -e API_PREFIX=/email-receiver-api \
-  -e CORS_ORIGIN=*,https://bridge.yunc.tech \
+  -e CORS_ORIGIN=*,https://your-domain.com \
   -v $(pwd)/data:/app/data \
   -v $(pwd)/logs:/app/logs \
   email-receiver
@@ -311,13 +311,13 @@ docker run -d \
 ```nginx
 server {
     listen 80;
-    server_name bridge.yunc.tech;
+    server_name your-domain.com;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name bridge.yunc.tech;
+    server_name your-domain.com;
 
     # SSL 配置
     ssl_certificate /path/to/your/certificate.crt;
@@ -434,7 +434,7 @@ sudo tail -f /var/log/nginx/error.log
 curl http://localhost:3000/api/health
 
 # 检查代理状态
-curl https://bridge.yunc.tech/email-receiver-api/health
+curl https://your-domain.com/email-receiver-api/health
 ```
 
 ## 🤝 贡献指南

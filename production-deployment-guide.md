@@ -16,7 +16,7 @@ HOST=0.0.0.0
 API_PREFIX=/email-receiver-api
 
 # 环境特定配置（通过 docker-compose 设置）
-CORS_ORIGIN=https://bridge.yunc.tech
+CORS_ORIGIN=https://your-domain.com
 LOG_LEVEL=info
 
 # 敏感配置（通过 secrets 或外部环境变量）
@@ -104,7 +104,7 @@ data:
   PORT: "3000"
   HOST: "0.0.0.0"
   API_PREFIX: "/email-receiver-api"
-  CORS_ORIGIN: "https://bridge.yunc.tech"
+  CORS_ORIGIN: "https://your-domain.com"
   LOG_LEVEL: "info"
   INVOICE_CONFIDENCE_THRESHOLD: "0.3"
 ```

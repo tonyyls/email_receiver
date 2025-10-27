@@ -97,7 +97,7 @@ services:
       
       # API 配置
       - API_PREFIX=/email-receiver-api
-      - CORS_ORIGIN=https://bridge.yunc.tech
+      - CORS_ORIGIN=https://your-domain.com
       
       # 日志配置
       - LOG_LEVEL=info
@@ -242,7 +242,7 @@ docker run -d \
 
 # 设置环境变量
 export NODE_ENV=production
-export CORS_ORIGIN=https://bridge.yunc.tech
+export CORS_ORIGIN=https://your-domain.com
 export EMAIL_PASSWORD=$(cat /etc/secrets/email_password)
 
 # 使用 docker-compose 部署
