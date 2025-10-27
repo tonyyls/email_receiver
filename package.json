@@ -1,7 +1,7 @@
 {
-  "name": "coze-email-receiver",
+  "name": "email-receiver-api",
   "version": "1.0.0",
-  "description": "Coze邮箱插件后端服务 - 支持邮件接收和发票识别",
+  "description": "通用邮件处理后端服务 - 支持邮件接收和发票识别",
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon src/server.ts",
@@ -13,13 +13,13 @@
     "test:coverage": "jest --coverage"
   },
   "keywords": [
-    "coze",
+    "email-processing",
     "email",
     "imap",
     "invoice",
     "plugin"
   ],
-  "author": "Coze Plugin Developer",
+  "author": "Email Receiver API Developer",
   "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",

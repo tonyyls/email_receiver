@@ -32,7 +32,7 @@ describe('API Tests', () => {
 
       expect(response.body).toEqual({
         success: true,
-        message: 'Coze邮箱插件服务运行正常',
+        message: '邮件接收服务运行正常',
         data: {
           status: 'healthy',
           timestamp: expect.any(String),

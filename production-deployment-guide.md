@@ -141,7 +141,7 @@ spec:
     spec:
       containers:
       - name: email-receiver
-        image: coze-email-receiver:latest
+        image: email-receiver-api:latest
         ports:
         - containerPort: 3000
         envFrom:
@@ -256,7 +256,7 @@ labels:
 set -e
 
 # 配置变量
-IMAGE_NAME="coze-email-receiver"
+IMAGE_NAME="email-receiver-api"
 IMAGE_TAG="latest"
 COMPOSE_FILE="docker-compose.prod.yml"
 
@@ -308,13 +308,13 @@ BACKUP_TAG="backup-$(date +%Y%m%d-%H%M%S)"
 echo "🔄 开始回滚..."
 
 # 1. 标记当前镜像为备份
-docker tag coze-email-receiver:latest coze-email-receiver:${BACKUP_TAG}
+docker tag email-receiver-api:latest email-receiver-api:${BACKUP_TAG}
 
 # 2. 停止当前容器
 docker-compose -f ${COMPOSE_FILE} down
 
 # 3. 恢复到上一个版本
-docker tag coze-email-receiver:previous coze-email-receiver:latest
+docker tag email-receiver-api:previous email-receiver-api:latest
 
 # 4. 启动容器
 docker-compose -f ${COMPOSE_FILE} up -d

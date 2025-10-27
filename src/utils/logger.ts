@@ -19,7 +19,7 @@ const logger = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.json()
   ),
-  defaultMeta: { service: 'coze-email-receiver' },
+  defaultMeta: { service: 'email-receiver-api' },
   transports: [
     // 写入所有日志到文件
     new winston.transports.File({

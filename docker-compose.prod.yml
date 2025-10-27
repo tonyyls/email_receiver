@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: coze-email-receiver:latest
+    image: email-receiver-api:latest
     container_name: email-receiver-prod
     ports:
       - "3000:3000"

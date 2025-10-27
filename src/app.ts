@@ -32,7 +32,7 @@ export function createApp(): express.Application {
   app.get('/', (_req, res) => {
     res.json({
       success: true,
-      message: 'Coze邮箱插件服务运行正常',
+      message: '邮件接收服务运行正常',
       data: {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -59,7 +59,7 @@ export function startServer(): void {
   const host = config.server.host || '0.0.0.0'; // 监听所有接口
 
   app.listen(port, host, () => {
-    logger.info(`Coze邮箱插件服务已启动`, {
+    logger.info(`邮件接收服务已启动`, {
       port,
       host,
       env: config.server.nodeEnv,
