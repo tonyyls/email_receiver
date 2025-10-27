@@ -1,0 +1,99 @@
+# Nginx 代理配置示例
+# 用于解决 "Client network socket disconnected before secure TLS connection was established" 错误
+
+server {
+    listen 80;
+    server_name bridge.yunc.tech;
+    
+    # 重定向 HTTP 到 HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name bridge.yunc.tech;
+
+    # SSL 证书配置
+    ssl_certificate /path/to/your/certificate.crt;
+    ssl_certificate_key /path/to/your/private.key;
+    
+    # SSL 安全配置
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # 代理配置
+    location / {
+        # 代理到后端应用
+        proxy_pass http://127.0.0.1:3000;
+        
+        # 重要：设置代理头部信息
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        
+        # 连接和超时设置
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # 缓冲设置
+        proxy_buffering on;
+        proxy_buffer_size 4k;
+        proxy_buffers 8 4k;
+        proxy_busy_buffers_size 8k;
+        
+        # 支持 WebSocket（如果需要）
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # 禁用代理缓存（对于 API 请求）
+        proxy_cache off;
+        
+        # 添加 CORS 头部（如果应用没有处理）
+        add_header Access-Control-Allow-Origin $http_origin always;
+        add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
+        add_header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With" always;
+        add_header Access-Control-Allow-Credentials true always;
+        
+        # 处理 OPTIONS 预检请求
+        if ($request_method = 'OPTIONS') {
+            add_header Access-Control-Allow-Origin $http_origin;
+            add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS";
+            add_header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With";
+            add_header Access-Control-Allow-Credentials true;
+            add_header Content-Length 0;
+            add_header Content-Type text/plain;
+            return 204;
+        }
+    }
+    
+    # 健康检查端点
+    location /health {
+        proxy_pass http://127.0.0.1:3000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # 日志配置
+    access_log /var/log/nginx/bridge.yunc.tech.access.log;
+    error_log /var/log/nginx/bridge.yunc.tech.error.log;
+}
+
+# 上游服务器配置（可选，用于负载均衡）
+upstream email_receiver_backend {
+    server 127.0.0.1:3000 max_fails=3 fail_timeout=30s;
+    # 如果有多个实例，可以添加更多服务器
+    # server 127.0.0.1:3001 max_fails=3 fail_timeout=30s;
+    
+    # 健康检查（需要 nginx-plus 或第三方模块）
+    # health_check;
+}

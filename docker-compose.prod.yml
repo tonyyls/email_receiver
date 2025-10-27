@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  email-receiver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: coze-email-receiver:latest
+    container_name: email-receiver-prod
+    ports:
+      - "3000:3000"
+    environment:
+      # 基础配置
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      
+      # API 配置
+      - API_PREFIX=/email-receiver-api
+      - CORS_ORIGIN=https://bridge.yunc.tech
+      
+      # 日志配置
+      - LOG_LEVEL=info
+      - LOG_FILE_PATH=logs/app.log
+      - ERROR_LOG_FILE_PATH=logs/error.log
+      
+      # 数据路径
+      - DATA_PATH=data
+      - EMAILS_PATH=data/emails
+      - INVOICES_PATH=data/invoices
+      
+      # 发票识别配置
+      - INVOICE_CONFIDENCE_THRESHOLD=0.3
+      - INVOICE_KEYWORD_SCORE_WEIGHT=0.4
+      - INVOICE_SENDER_SCORE_WEIGHT=0.3
+      - INVOICE_SUBJECT_SCORE_WEIGHT=0.3
+      
+      # IMAP 配置
+      - IMAP_CONNECTION_TIMEOUT=10000
+      - IMAP_AUTH_TIMEOUT=5000
+      
+      # 邮件处理配置
+      - MAX_EMAILS_TO_FETCH=50
+      - ENABLE_LOCAL_STORAGE=true
+      
+    volumes:
+      # 数据持久化（生产环境使用 Docker 卷）
+      - email-data:/app/data
+      - email-logs:/app/logs
+      
+    secrets:
+      - email_password
+      - database_url
+      
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http = require('http'); const options = { hostname: 'localhost', port: 3000, path: '/api/health', timeout: 2000 }; const req = http.request(options, (res) => { if (res.statusCode === 200) process.exit(0); else process.exit(1); }); req.on('error', () => process.exit(1)); req.on('timeout', () => process.exit(1)); req.end();"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      
+    networks:
+      - email-network
+      
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  # Nginx 反向代理（可选）
+  nginx:
+    image: nginx:alpine
+    container_name: email-receiver-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - email-receiver
+    networks:
+      - email-network
+    restart: unless-stopped
+
+secrets:
+  email_password:
+    file: ./secrets/email_password.txt
+  database_url:
+    file: ./secrets/database_url.txt
+
+networks:
+  email-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  email-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/docker/volumes/email-receiver-data
+  email-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/log/email-receiver

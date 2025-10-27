@@ -1,0 +1,59 @@
+{
+  "name": "coze-email-receiver",
+  "version": "1.0.0",
+  "description": "Coze邮箱插件后端服务 - 支持邮件接收和发票识别",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [
+    "coze",
+    "email",
+    "imap",
+    "invoice",
+    "plugin"
+  ],
+  "author": "Coze Plugin Developer",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "helmet": "^7.1.0",
+    "imap": "^0.8.19",
+    "joi": "^17.11.0",
+    "mailparser": "^3.6.5",
+    "moment": "^2.29.4",
+    "poplib": "^0.1.7",
+    "uuid": "^9.0.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/imap": "^0.8.35",
+    "@types/jest": "^29.5.0",
+    "@types/mailparser": "^3.0.3",
+    "@types/node": "^20.0.0",
+    "@types/supertest": "^6.0.0",
+    "@types/uuid": "^9.0.7",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "eslint": "^8.55.0",
+    "jest": "^29.5.0",
+    "nodemon": "^3.0.0",
+    "supertest": "^6.3.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
