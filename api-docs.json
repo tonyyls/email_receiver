@@ -1,0 +1,899 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Email Receiver API",
+    "description": "通用邮件处理后端服务 - 支持邮件接收、处理和智能发票识别功能",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Email Receiver API Developer",
+      "email": "developer@example.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "本地开发环境"
+    },
+    {
+      "url": "https://your-domain.com/email-receiver-api",
+      "description": "生产环境"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["系统"],
+        "summary": "健康检查",
+        "description": "检查服务运行状态",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "服务运行正常",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "服务运行正常",
+                  "data": {
+                    "status": "healthy",
+                    "timestamp": "2024-01-01T12:00:00.000Z",
+                    "version": "1.0.0"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/test-connection": {
+      "post": {
+        "tags": ["邮件服务"],
+        "summary": "测试邮箱连接",
+        "description": "测试邮箱服务器连接是否正常",
+        "operationId": "testConnection",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailConfig"
+              },
+              "example": {
+                "email_address": "test@example.com",
+                "password": "your_password",
+                "imap_host": "imap.example.com",
+                "imap_port": 993,
+                "use_tls": true,
+                "pop3_host": "pop3.example.com",
+                "pop3_port": 995,
+                "protocol": "imap"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "连接测试成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionTestResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "邮箱连接测试成功",
+                  "data": {
+                    "success": true,
+                    "message": "IMAP 连接成功",
+                    "protocol": "imap",
+                    "host": "imap.example.com",
+                    "port": 993
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "连接测试失败或参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "success": false,
+                  "message": "参数验证失败: email_address is required",
+                  "data": null
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fetch-emails": {
+      "post": {
+        "tags": ["邮件服务"],
+        "summary": "获取邮件列表",
+        "description": "从邮箱服务器获取邮件列表",
+        "operationId": "fetchEmails",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailQuery"
+              },
+              "example": {
+                "email_address": "test@example.com",
+                "password": "your_password",
+                "imap_host": "imap.example.com",
+                "imap_port": 993,
+                "use_tls": true,
+                "protocol": "imap",
+                "limit": 10,
+                "folder": "INBOX",
+                "since_date": "2024-01-01"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "邮件获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FetchEmailsResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "成功获取 5 封邮件",
+                  "data": {
+                    "success": true,
+                    "message": "成功获取 5 封邮件",
+                    "emails": [
+                      {
+                        "id": "1",
+                        "subject": "发票通知",
+                        "from": "billing@company.com",
+                        "to": ["test@example.com"],
+                        "date": "2024-01-01T10:00:00.000Z",
+                        "body": "您的发票已生成，请查收。",
+                        "attachments": []
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "参数错误或获取失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/detect-invoices": {
+      "post": {
+        "tags": ["发票识别"],
+        "summary": "发票邮件检测",
+        "description": "对提供的邮件列表进行发票检测",
+        "operationId": "detectInvoices",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceDetectionRequest"
+              },
+              "example": {
+                "emails": [
+                  {
+                    "id": "1",
+                    "subject": "发票通知",
+                    "from": "billing@company.com",
+                    "to": ["test@example.com"],
+                    "date": "2024-01-01T10:00:00.000Z",
+                    "body": "您的发票已生成，请查收。",
+                    "attachments": []
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "发票检测完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDetectionResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "发票检测完成，共检测到 1 封发票邮件",
+                  "data": {
+                    "total": 1,
+                    "invoiceCount": 1,
+                    "results": [
+                      {
+                        "isInvoice": true,
+                        "confidence": 0.95,
+                        "matchedKeywords": ["发票", "账单"],
+                        "email": {
+                          "id": "1",
+                          "subject": "发票通知",
+                          "from": "billing@company.com"
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fetch-and-detect": {
+      "post": {
+        "tags": ["邮件服务"],
+        "summary": "获取邮件并检测发票",
+        "description": "组合接口：获取邮件列表并进行发票检测",
+        "operationId": "fetchAndDetectInvoices",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FetchAndDetectResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "操作完成，共获取 10 封邮件，检测到 3 封发票邮件",
+                  "data": {
+                    "total": 10,
+                    "invoiceCount": 3,
+                    "results": [],
+                    "fetchInfo": {
+                      "totalFetched": 10,
+                      "fetchMessage": "成功获取 10 封邮件"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fetch-invoice-emails": {
+      "post": {
+        "tags": ["邮件服务"],
+        "summary": "获取发票邮件",
+        "description": "获取邮件并只返回检测到的发票邮件",
+        "operationId": "fetchInvoiceEmails",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "发票邮件获取完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceEmailsResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "操作完成，共获取 10 封邮件，检测到 3 封发票邮件",
+                  "data": {
+                    "total": 10,
+                    "invoiceCount": 3,
+                    "invoiceEmails": [
+                      {
+                        "isInvoice": true,
+                        "confidence": 0.95,
+                        "matchedKeywords": ["发票"],
+                        "email": {
+                          "id": "1",
+                          "subject": "发票通知"
+                        }
+                      }
+                    ],
+                    "fetchInfo": {
+                      "totalFetched": 10,
+                      "fetchMessage": "成功获取 10 封邮件"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invoice-keywords": {
+      "get": {
+        "tags": ["发票识别"],
+        "summary": "获取发票关键词配置",
+        "description": "获取当前的发票识别关键词配置",
+        "operationId": "getInvoiceKeywords",
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceKeywordsResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "获取发票关键词配置成功",
+                  "data": {
+                    "subject_keywords": ["发票", "账单", "invoice", "bill"],
+                    "body_keywords": ["发票", "账单", "付款", "应付"],
+                    "sender_keywords": ["billing", "finance", "invoice"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["发票识别"],
+        "summary": "更新发票关键词配置",
+        "description": "更新发票识别关键词配置",
+        "operationId": "updateInvoiceKeywords",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceKeywords"
+              },
+              "example": {
+                "subject_keywords": ["发票", "账单", "invoice", "bill"],
+                "body_keywords": ["发票", "账单", "付款", "应付"],
+                "sender_keywords": ["billing", "finance", "invoice"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "更新发票关键词配置成功",
+                  "data": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "操作是否成功"
+          },
+          "message": {
+            "type": "string",
+            "description": "响应消息"
+          },
+          "data": {
+            "description": "响应数据"
+          }
+        },
+        "required": ["success", "message"]
+      },
+      "HealthResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "example": "healthy"
+                  },
+                  "timestamp": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "EmailConfig": {
+        "type": "object",
+        "properties": {
+          "email_address": {
+            "type": "string",
+            "format": "email",
+            "description": "邮箱地址"
+          },
+          "password": {
+            "type": "string",
+            "description": "邮箱密码或授权码"
+          },
+          "imap_host": {
+            "type": "string",
+            "description": "IMAP 服务器地址"
+          },
+          "imap_port": {
+            "type": "integer",
+            "default": 993,
+            "description": "IMAP 端口"
+          },
+          "use_tls": {
+            "type": "boolean",
+            "default": true,
+            "description": "是否使用 TLS"
+          },
+          "pop3_host": {
+            "type": "string",
+            "description": "POP3 服务器地址"
+          },
+          "pop3_port": {
+            "type": "integer",
+            "default": 995,
+            "description": "POP3 端口"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": ["imap", "pop3"],
+            "default": "imap",
+            "description": "邮件协议"
+          }
+        },
+        "required": ["email_address", "password", "protocol"]
+      },
+      "EmailQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EmailConfig"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "default": 10,
+                "minimum": 1,
+                "maximum": 100,
+                "description": "获取邮件数量限制"
+              },
+              "folder": {
+                "type": "string",
+                "default": "INBOX",
+                "description": "邮箱文件夹"
+              },
+              "since_date": {
+                "type": "string",
+                "format": "date",
+                "description": "获取此日期之后的邮件"
+              }
+            }
+          }
+        ]
+      },
+      "EmailMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "邮件ID"
+          },
+          "subject": {
+            "type": "string",
+            "description": "邮件主题"
+          },
+          "from": {
+            "type": "string",
+            "description": "发件人"
+          },
+          "to": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "收件人列表"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "邮件日期"
+          },
+          "body": {
+            "type": "string",
+            "description": "邮件正文"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "filename": {
+                  "type": "string"
+                },
+                "contentType": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "integer"
+                }
+              }
+            },
+            "description": "附件列表"
+          }
+        }
+      },
+      "ConnectionTestResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "protocol": {
+                    "type": "string"
+                  },
+                  "host": {
+                    "type": "string"
+                  },
+                  "port": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "FetchEmailsResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "emails": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/EmailMessage"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "InvoiceDetectionRequest": {
+        "type": "object",
+        "properties": {
+          "emails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmailMessage"
+            },
+            "description": "待检测的邮件列表"
+          }
+        },
+        "required": ["emails"]
+      },
+      "InvoiceDetectionResult": {
+        "type": "object",
+        "properties": {
+          "isInvoice": {
+            "type": "boolean",
+            "description": "是否为发票邮件"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "置信度"
+          },
+          "matchedKeywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "匹配的关键词"
+          },
+          "email": {
+            "$ref": "#/components/schemas/EmailMessage"
+          }
+        }
+      },
+      "InvoiceDetectionResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer",
+                    "description": "总邮件数"
+                  },
+                  "invoiceCount": {
+                    "type": "integer",
+                    "description": "发票邮件数"
+                  },
+                  "results": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/InvoiceDetectionResult"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "FetchAndDetectResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InvoiceDetectionResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "fetchInfo": {
+                    "type": "object",
+                    "properties": {
+                      "totalFetched": {
+                        "type": "integer",
+                        "description": "获取的邮件总数"
+                      },
+                      "fetchMessage": {
+                        "type": "string",
+                        "description": "获取邮件的消息"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "InvoiceEmailsResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer",
+                    "description": "总邮件数"
+                  },
+                  "invoiceCount": {
+                    "type": "integer",
+                    "description": "发票邮件数"
+                  },
+                  "invoiceEmails": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/InvoiceDetectionResult"
+                    },
+                    "description": "发票邮件列表"
+                  },
+                  "fetchInfo": {
+                    "type": "object",
+                    "properties": {
+                      "totalFetched": {
+                        "type": "integer"
+                      },
+                      "fetchMessage": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "InvoiceKeywords": {
+        "type": "object",
+        "properties": {
+          "subject_keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "主题关键词"
+          },
+          "body_keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "正文关键词"
+          },
+          "sender_keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "发件人关键词"
+          }
+        }
+      },
+      "InvoiceKeywordsResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/InvoiceKeywords"
+              }
+            }
+          }
+        ]
+      },
+      "SuccessResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "null"
+              }
+            }
+          }
+        ]
+      },
+      "ErrorResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": false
+              },
+              "data": {
+                "type": "null"
+              },
+              "error": {
+                "type": "string",
+                "description": "错误详情"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "系统",
+      "description": "系统相关接口"
+    },
+    {
+      "name": "邮件服务",
+      "description": "邮件获取和处理相关接口"
+    },
+    {
+      "name": "发票识别",
+      "description": "发票识别和关键词管理相关接口"
+    }
+  ]
+}
